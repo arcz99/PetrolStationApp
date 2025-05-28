@@ -1,0 +1,76 @@
+﻿@page "/paliwa"
+@using StacjaBenzynowaApp.Data
+@inject HttpClient Http
+@using System.Net.Http.Json
+@using System.ComponentModel.DataAnnotations
+
+<h3>Lista paliw (z bazy)</h3>
+
+<h4>Dodaj nowe paliwo</h4>
+<EditForm Model="@nowePaliwo" OnValidSubmit="DodajPaliwo">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div>
+        <label>Nazwa:</label>
+        <InputText @bind-Value="nowePaliwo.Nazwa" />
+    </div>
+    <div>
+        <label>Cena:</label>
+        <InputNumber @bind-Value="nowePaliwo.Cena" />
+    </div>
+    <button type="submit">Dodaj</button>
+</EditForm>
+
+@if (paliwa == null)
+{
+    <p>Ładowanie danych...</p>
+}
+else if (paliwa.Count == 0)
+{
+    <p>Brak paliw w bazie.</p>
+}
+else
+{
+    <ul>
+        @foreach (var paliwo in paliwa)
+        {
+            <li>@paliwo.Nazwa - Cena: @paliwo.Cena zł</li>
+        }
+    </ul>
+}
+
+@code {
+    List<Paliwo> paliwa;
+    Paliwo nowePaliwo = new Paliwo();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await PobierzPaliwa();
+    }
+
+    private async Task PobierzPaliwa()
+    {
+        paliwa = await Http.GetFromJsonAsync<List<Paliwo>>("https://localhost:7254/api/paliwa");
+    }
+
+    // To jest funkcja wywoływana przy submit
+    private async Task DodajPaliwo()
+    {
+        // Wysyłamy nowe paliwo do API
+        var response = await Http.PostAsJsonAsync("https://localhost:7254/api/paliwa", nowePaliwo);
+
+        if (response.IsSuccessStatusCode)
+        {
+            // Po udanym dodaniu, pobieramy zaktualizowaną listę
+            await PobierzPaliwa();
+            // Czyścimy formularz
+            nowePaliwo = new Paliwo();
+        }
+        else
+        {
+            // Obsługa błędu (prosto: alert)
+            Console.WriteLine("Nie udało się dodać paliwa!");
+        }
+    }
+}
