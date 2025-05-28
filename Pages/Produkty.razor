@@ -1,0 +1,74 @@
+﻿@page "/produkty"
+@using PetrolStationApp.Models
+@inject HttpClient Http
+@using System.Net.Http.Json
+
+<h3>Lista produktów (sklep)</h3>
+
+<h4>Dodaj nowy produkt</h4>
+<EditForm Model="@nowyProdukt" OnValidSubmit="DodajProdukt">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div>
+        <label>Nazwa:</label>
+        <InputText @bind-Value="nowyProdukt.Nazwa" />
+    </div>
+    <div>
+        <label>Cena:</label>
+        <InputNumber @bind-Value="nowyProdukt.Cena" />
+    </div>
+    <div>
+        <label>Ilość:</label>
+        <InputNumber @bind-Value="nowyProdukt.Ilosc" />
+    </div>
+    <button type="submit">Dodaj</button>
+</EditForm>
+
+@if (produkty == null)
+{
+    <p>Ładowanie danych...</p>
+}
+else if (produkty.Count == 0)
+{
+    <p>Brak produktów w bazie.</p>
+}
+else
+{
+    <ul>
+        @foreach (var produkt in produkty)
+        {
+            <li>@produkt.Nazwa - Cena: @produkt.Cena zł - Ilość: @produkt.Ilosc</li>
+        }
+    </ul>
+}
+
+@code {
+    List<Produkt> produkty;
+    Produkt nowyProdukt = new Produkt();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await PobierzProdukty();
+    }
+
+    private async Task PobierzProdukty()
+    {
+        produkty = await Http.GetFromJsonAsync<List<Produkt>>("https://localhost:7254/api/produkty");
+    }
+
+    private async Task DodajProdukt()
+    {
+        var response = await Http.PostAsJsonAsync("https://localhost:7254/api/produkty", nowyProdukt);
+
+        if (response.IsSuccessStatusCode)
+        {
+            await PobierzProdukty();
+            nowyProdukt = new Produkt();
+        }
+        else
+        {
+            Console.WriteLine("Nie udało się dodać produktu!");
+        }
+    }
+}

@@ -1,0 +1,60 @@
+﻿@page "/login"
+@inject HttpClient Http
+@using PetrolStationApp.Models
+@using StacjaBenzynowaApp.Models
+@using System.Net.Http.Json
+
+<h3>Logowanie</h3>
+
+<EditForm Model="@loginModel" OnValidSubmit="LoginUser">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div>
+        <label>Login:</label>
+        <InputText @bind-Value="loginModel.Login" />
+    </div>
+    <div>
+        <label>Hasło:</label>
+        <InputText @bind-Value="loginModel.Password" type="password" />
+    </div>
+    <button type="submit">Zaloguj</button>
+</EditForm>
+
+@if (errorMsg != null)
+{
+    <div class="alert alert-danger">@errorMsg</div>
+}
+
+@code {
+    LoginModel loginModel = new LoginModel();
+    string errorMsg;
+
+    private async Task LoginUser()
+    {
+        Console.WriteLine($"Login: {loginModel.Login}, Password: {loginModel.Password}");
+        try
+        {
+            var response = await Http.PostAsJsonAsync("https://localhost:7254/api/users/login", loginModel);
+            if (response.IsSuccessStatusCode)
+            {
+                var loggedUser = await response.Content.ReadFromJsonAsync<User>();
+                // Tu zapisz dane użytkownika do session/localStorage lub w stanie aplikacji!
+                errorMsg = null;
+                // Przekieruj do strony głównej albo na inną stronę:
+                NavigationManager.NavigateTo("/");
+            }
+            else
+            {
+                errorMsg = "Błędny login lub hasło.";
+            }
+        }
+        catch
+        {
+            errorMsg = "Błąd logowania. Spróbuj ponownie.";
+        }
+    }
+
+    [Inject]
+    NavigationManager NavigationManager { get; set; }
+}
