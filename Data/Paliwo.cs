@@ -6,7 +6,7 @@ namespace StacjaBenzynowaApp.Data
     {
         public int Id { get; set; }
 
-        [Required(ErrorMessage = "Podaj nazwę paliwa!")]
+        [Required(ErrorMessage = "TESTPodaj nazwę paliwa!")]
         public string Nazwa { get; set; }
 
         [Required(ErrorMessage = "Podaj cenę paliwa!")]
